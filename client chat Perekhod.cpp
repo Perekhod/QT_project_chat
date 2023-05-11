@@ -19,8 +19,8 @@ void Registration(sf::TcpSocket& sock, sf::Packet& pack, Message& mess, std::str
 
 	pack << login << password;
 	sock.send(pack);
-	//pack.clear();
-	//mess.clear();
+	pack.clear();
+	mess.clear();
 }
 
 int main()
@@ -132,7 +132,7 @@ int main()
 				packet.	clear();
 				message.clear();
 			}
-			else std::cout << "\nIncomers haven’t been in yet\n\n";
+			else std::cout << "\nIncomers havenâ€™t been in yet\n\n";
 			break;
 		}
 		case '5':
