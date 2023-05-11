@@ -1,5 +1,5 @@
 # Final_project_chat by Perekhod.
-1.  Simple chat using SFML library.
+1.  Chat using SFML library.
 
 2.  The project used Message structure and User class.
     The structure used overloading operators << and >>.
