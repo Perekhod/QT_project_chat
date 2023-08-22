@@ -12,3 +12,5 @@
 
 
 6. ps. Why on github some lines have dropped, in my visual studio everything is exactly :)
+
+7. add db (22.08)
