@@ -2,83 +2,85 @@
 #include <string>
 #include "message.h"
 #include <SFML/Network.hpp>
+#include <thread>
+#include <mutex>
 
 void Registration (sf::TcpSocket& sock, sf::Packet& pack, Message& mess, std::string& log, std::string& pas)
 {
-	
-	std::cout << "Ваш логин: ";
-	std::cin >> log;
-	
-	std::cout << "\nВаш пароль: ";
-	std::cin >> pas;
-	std::cout << std::endl;
-	
-	mess._sender = log;
+    std::cout << "Your login: ";
+    std::cin >> log;
 
-	pack << log << pas;
-	sock.send(pack);
-	pack.clear();
-	mess.clear();
+    std::cout << "\nYour password: ";
+    std::cin >> pas;
+    std::cout << std::endl;
+
+    mess._sender = log;
+
+    pack << log << pas;
+    sock.send(pack);
+    pack.clear();
+    mess.clear();
+}
+
+void receiveMessages(sf::TcpSocket& socket)
+{
+    sf::Packet packet;
+    Message message;
+
+    while (true)
+    {
+        if (socket.receive(packet) == sf::Socket::Done)
+        {
+            packet >> message;
+           
+            std::cout << "\nReceived message from " << message._sender << ": " << message._text_message;
+            packet.clear();
+            message.clear();
+        }
+    }
 }
 
 int main()
 {
+    sf::TcpSocket socket;
+    socket.setBlocking(false);
+    socket.connect("192.168.0.149", 55001); // Заменить на IP адрес сервера
 
-	sf::TcpSocket socket;
-	socket.setBlocking(false);
-	socket.connect("192.168.0.149", 55001); //Прописываем тот ip, который показывает сервер
-	
-	Message message;
-	sf::Packet packet;
+    Message message;
+    sf::Packet packet;
 
-	std::string login(""), pass("");
+    std::string login(""), pass("");
+    
 
-	Registration(socket, packet, message, login, pass);
+    Registration(socket, packet, message, login, pass);
 
-	while(true)
-	{
-		socket.receive(packet);
-		packet >> message;
-		
-		if(message._text_message == "Exist")
-		{
-			std::cout << "\nПользователь с таким логином сейчас онлайн. Придумайте новый логин и пароль\n";
-			packet.clear();
-			message.clear();
-			socket.disconnect();
-			socket.connect("192.168.0.149", 55001);//Тут тоже нужно прописать ip
-			Registration(socket, packet, message, login, pass);
-		}
-		
-		else if(message._text_message == "good")
-		{
-			std::cout << "\nВы Зарегистрированы\n\n";
-			break;
-		}
-	}
+    // Создал поток для получения сообщений
+    std::thread messageReceiver(receiveMessages, std::ref(socket));
+    messageReceiver.detach();
+    
+    
+    while (true)
+    {
+        char select('0');
+        std::cout << "\n";
+        std::cout << "Выберите опцию:"
+            << "\n1) Получить список пользователей"
+            << "\n2) Отправить личное сообщение"
+            << "\n3) Отправить сообщение всем"
+            << "\n4) Выйти\n";
 
-	while(true)
-	{
-		char select('0');
-		
-		std::cout << "Для получения ответа на запрос или проверки входящих выберите 4-ый вариант"
-		     << "\n1) Получить список онлайн пользователей\n"
-		     << "2) Отправить личное сообщение\n"
-		     << "3) Отправить сообщение всем\n"
-		     << "4) Проверить входящие сообщения\n"
-		     << "5) Выход(Закрыть приложение)\n";
-		     
-		while(true)
-		{//Проверка ввода на соответствие меню
-			std::cout << "Введите номер из меню: ";
-			std::cin >> select;
-			std::cout << std::endl;
-			if(select >= '1' && select <= '5') break;
-			else continue;
-		}
+        while (true)
+        {
+        	
+            std::cout << "Enter the number from the menu: ";
+            std::cin >> select;
+            std::cout << std::endl;
+            if (select >= '1' && select <= '4') break;
+            else continue;
+        }
 
-		switch(select)
-		{
+        switch (select)
+        {
 			case '1':
 				{
 					packet.clear();
@@ -128,46 +130,31 @@ int main()
 					break;
 				}
 			
-			case '4':
-				{
-					if(socket.receive(packet) == sf::Socket::Done)
-					{
-						packet >> message;
-						std::cout  << "\nСообщение от "<<  message << "\n\n";
-						packet.clear();
-						message.clear();
-					}
-					else std::cout << "\nВходящих пока не было\n\n";
-					
-					break;
-				}
+            case '4':
+            {
+                packet.clear();
+                message.clear();
 
-			case '5':
-				{
-					packet.clear();
-					message.clear();
+                message._sender = login;
+                message._text_message = "delete";
+                message._recipient = "Server";
 
-					message._sender = login;
-					message._text_message = "delete";
-					message._recipient = "Server";
-					
-					packet << message;
-					socket.send(packet);
-					
-					packet.clear();
-					message.clear();
+                packet << message;
+                socket.send(packet);
 
-					socket.disconnect();
+                packet.clear();
+                message.clear();
+				
+                socket.disconnect();
+                
+                return 0;
+            }
 
-					return 0;
-				}
+            default:
+                std::cout << "Нет такого номера\n";
+                break;
+        }
+    }
 
-			default:
-				std::cout << "Нет такого варианта\n";
-				break;
-		}
-		
-	}
-	
-	return 0;
+    return 0;
 }
