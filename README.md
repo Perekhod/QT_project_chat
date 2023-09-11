@@ -10,7 +10,8 @@
 
 5.  The class is used to combine a server-side name, password, and socket into one entity.
 
+6. add db (22.08)
 
-6. ps. Why on github some lines have dropped, in my visual studio everything is exactly :)
+7. add log.h (11.09)
 
-7. add db (22.08)
+8. ps. Why on github some lines have dropped, in my visual studio everything is exactly :)
